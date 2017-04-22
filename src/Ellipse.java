@@ -23,8 +23,8 @@ public class Ellipse implements Styles {
 	@Override
 	public void draw(Graphics2D g2) {
 		// draw labels
-		for (int i = 6; i > 0; i--) {
-			String labelB = "B" + (7 - i);
+		for (int i = BoardModel.BOARD_SIZE; i > 0; i--) {
+			String labelB = "B" + (BoardModel.BOARD_SIZE + 1 - i);
 			g2.setFont(new Font("Arial", Font.BOLD, 33));
 			g2.setColor(Color.GREEN);
 			g2.drawString(labelB, 110 + (100 * i), 150);
@@ -42,7 +42,7 @@ public class Ellipse implements Styles {
 		g2.draw(mancalaA);
 
 		/* draw pits for player A */
-		for (int i = 1; i <= 6; i++) {
+		for (int i = 1; i <= BoardModel.BOARD_SIZE; i++) {
 			Ellipse2D.Double pitA = new Ellipse2D.Double(100 + (100 * i), 440, 60, 80);
 			g2.setColor(Color.GREEN);
 			g2.fill(pitA);
@@ -62,7 +62,7 @@ public class Ellipse implements Styles {
 		}
 
 		/* draw 6 pits for player B */
-		for (int i = 1; i <= 6; i++) {
+		for (int i = 1; i <= BoardModel.BOARD_SIZE; i++) {
 			Ellipse2D.Double pitB6 = new Ellipse2D.Double(100 + (100 * i), 155, 60, 80);
 			g2.setColor(Color.GREEN);
 			g2.fill(pitB6);
