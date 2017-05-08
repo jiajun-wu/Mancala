@@ -5,7 +5,7 @@
  * information such as: the times the player did the undo, and determine whether
  * he is the current player is player the game.
  * 
- * @author Jiajun Wu
+ * @author Jiajun Wu, Medha Korrapati, Hien Nguyen
  *
  */
 public class Player {

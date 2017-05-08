@@ -6,8 +6,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 /**
- * 
- * @author Jiajun Wu
+ * Model for the Mancala game, basically all the logics goes to here
+ * @author Jiajun Wu, Medha Korrapati, Hien Nguyen
  * May 4, 2017
  */
 public class BoardModel {
@@ -57,6 +57,10 @@ public class BoardModel {
 
 	}
 
+	/**
+	 * draw marbles to pits
+	 * @param marbles the number of marbles need to be drawn
+	 */
 	public void initMarblesToPits(int marbles) {
 		int counter = 0;
 		for (Pit pit : pits)
@@ -77,12 +81,17 @@ public class BoardModel {
 		listeners.add(listener);
 	}
 
+	/**
+	 * move marbles to following pits
+	 * @param currentPit the pit index which the player selected
+	 * @param numberOfMarbles
+	 */
 	public void moveMarbles(int currentPit, int numberOfMarbles) {
 		while (numberOfMarbles > 0) {
-			if (currentPit == PLAYER_A_STORE_INDEX - 1 && matchCurrentPlayer(playerB))
+			if (currentPit == PLAYER_A_STORE_INDEX - 1 && compareCurrentPlayer(playerB))
 				// playerB will past playerA's store, instead of putting marble
 				currentPit += 2;
-			else if (currentPit == PLAYER_B_STORE_INDEX - 1 && matchCurrentPlayer(playerA))
+			else if (currentPit == PLAYER_B_STORE_INDEX - 1 && compareCurrentPlayer(playerA))
 				currentPit = 0;
 			else
 				currentPit++;
@@ -96,43 +105,55 @@ public class BoardModel {
 		}
 	}
 
+	/**
+	 * find which pit has the last marble dropped
+	 * 
+	 * @param pit 
+	 * @return index of the pit which last marble was dropped
+	 */
 	public int whereIsTheLastDroppedMarble(Pit pit) {
 		int currentPitMarbles = pit.getMarbles();
-		int currentPit = pit.getPitNum();
+		int lastPit = pit.getPitNum();
 		while (currentPitMarbles > 0) {
-			if (currentPit == PLAYER_A_STORE_INDEX - 1 && matchCurrentPlayer(playerA))
+			if (lastPit == PLAYER_A_STORE_INDEX - 1 && compareCurrentPlayer(playerA))
 				// playerB will past playerA's store, instead of putting marble
-				currentPit += 2;
-			else if (currentPit == PLAYER_B_STORE_INDEX - 1 && matchCurrentPlayer(playerB))
-				currentPit += 2;
+				lastPit += 2;
+			else if (lastPit == PLAYER_B_STORE_INDEX - 1 && compareCurrentPlayer(playerB))
+				lastPit += 2;
 			else
-				currentPit++;
+				lastPit++;
 
-			if (currentPit == PLAYER_B_STORE_POSITION)
-				currentPit = 0;
+			if (lastPit == PLAYER_B_STORE_POSITION)
+				lastPit = 0;
 
 			currentPitMarbles--;
 		}
-		return currentPit;
+		return lastPit;
 	}
 
+	/**
+	 * get opponent's marbles
+	 * @param lastMarbleDropped
+	 */
 	private void getOppoMarbles(int lastMarbleDropped) {
-		// TODO need to fix final numbers!!!!!!!!
 		int mancala = BOARD_SIZE;
 		if (lastMarbleDropped == PLAYER_A_STORE_INDEX || lastMarbleDropped == PLAYER_B_STORE_INDEX)
 			return;
-		else if (pits.get(lastMarbleDropped).getMarbles() == 1
-				&& matchCurrentPlayer(pits.get(lastMarbleDropped).getPlayer())) {
+		else if (pits.get(lastMarbleDropped).getMarbles() == 1 && compareCurrentPlayer(pits.get(lastMarbleDropped).getPlayer())) {
+			
 			if (pits.get(PLAYER_B_STORE_INDEX - 1 - lastMarbleDropped).getMarbles() == 0)
 				return;
-			if (matchCurrentPlayer(playerA))
+			if (compareCurrentPlayer(playerA))
 				mancala = PLAYER_A_STORE_INDEX;
 			else
 				mancala = PLAYER_B_STORE_INDEX;
 
-			pits.get(mancala).setMarbles(pits.get(mancala).getMarbles()
-					+ pits.get(PLAYER_B_STORE_INDEX - 1 - lastMarbleDropped).getMarbles());
-			pits.get(mancala).setMarbles(pits.get(mancala).getMarbles() + pits.get(lastMarbleDropped).getMarbles());
+			pits.get(mancala)
+					.setMarbles(pits.get(mancala).getMarbles()
+							+ pits.get(PLAYER_B_STORE_INDEX - 1 - lastMarbleDropped).getMarbles()
+							+ pits.get(lastMarbleDropped).getMarbles());
+//			pits.get(mancala).setMarbles(pits.get(mancala).getMarbles() + pits.get(lastMarbleDropped).getMarbles());
+			
 			pits.get(PLAYER_B_STORE_INDEX - 1 - lastMarbleDropped).setMarbles(0);
 			pits.get(lastMarbleDropped).setMarbles(0);
 		}
@@ -146,7 +167,7 @@ public class BoardModel {
 	public void play(Pit pitIndex) {
 		
 		// check if current player is trying to move his own pits
-		if (!matchCurrentPlayer(pitIndex.getPlayer()))
+		if (!compareCurrentPlayer(pitIndex.getPlayer()))
 			return;
 
 		// if current pit has zero marble, skip
@@ -159,21 +180,26 @@ public class BoardModel {
 		
 		moveMarbles(pitIndex.getPitNum(), pitIndex.getMarbles());
 
-		// set zero marble to current pit after moving marbles
-		pitIndex.setMarbles(0);
-
 		// check if current player can get opponent's marbles follows by game rule
 		getOppoMarbles(whereIsTheLastDroppedMarble(pitIndex));
+		
+		// set zero marble to current pit after moving marbles
+		pitIndex.setMarbles(0);
 
 		if (isGameOver())
 			wipeBoard();
 
-		if (!getFreeRound(pitIndex))
+		if (!hasFreeRun)
 			switchPlayer();
 
 		updateView();
 	}
 
+	/**
+	 * back up the current status of the Mancala game, 
+	 * if the current player wants to undo previous step, 
+	 * the new data will be covered by backup data.
+	 */
 	private void backUpCurrentStatusForUndo() {
 		for (Pit pit : pits)
 			lastStep[pit.getPitNum()] = pit.getMarbles();
@@ -187,38 +213,54 @@ public class BoardModel {
 	private boolean getFreeRound(Pit pit) {
 		boolean flag = false;
 		int totalMoves = pit.getPitNum() + pit.getMarbles();
-		if ((totalMoves - BOARD_SIZE) % (PLAYER_B_STORE_INDEX) == 0 && matchCurrentPlayer(playerA))
+		
+		// if the last pit was dropped on player A's store, player A gets a free round
+		if ((totalMoves - PLAYER_A_STORE_INDEX) % (PLAYER_B_STORE_INDEX) == 0 && compareCurrentPlayer(playerA))
 			flag = true;
 
-		if ((totalMoves - (PLAYER_B_STORE_INDEX)) % (PLAYER_B_STORE_INDEX) == 0 && matchCurrentPlayer(playerB))
+		// if the last pit was dropped on player B's store, player B gets a free round
+		if ((totalMoves - (PLAYER_B_STORE_INDEX)) % (PLAYER_B_STORE_INDEX) == 0 && compareCurrentPlayer(playerB))
 			flag = true;
 
 		return flag;
 	}
 
-	private boolean matchCurrentPlayer(Player player) {
+	/**
+	 * compared whether a player is in his turn
+	 * 
+	 * @param player the player to be compared
+	 * @return true is current player, false otherwise
+	 */
+	private boolean compareCurrentPlayer(Player player) {
 		return currentPlayer.equals(player);
 	}
 
+	/**
+	 * determine whether a game is game-over
+	 * @return true if the game is game-over, false otherwise
+	 */
 	public boolean isGameOver() {
-		// TODO debug here
 		boolean noMarblesInPitsA = true;
-		for (int i = 0; i < BOARD_SIZE; i++)
+		for (int i = 0; i < PLAYER_A_STORE_INDEX; i++)
 			if (pits.get(i).getMarbles() != 0)
 				noMarblesInPitsA = false;
 
 		boolean noMarblesInPitsB = true;
-		for (int i = PLAYER_A_STORE_POSITION; i < PLAYER_B_STORE_INDEX; i++)
+		for (int i = PLAYER_A_STORE_INDEX + 1; i < PLAYER_B_STORE_INDEX; i++)
 			if (pits.get(i).getMarbles() != 0)
 				noMarblesInPitsB = false;
 
 		isGameOver = noMarblesInPitsA || noMarblesInPitsB;
+		
 		if (isGameOver)
 			getResult();
 
 		return isGameOver;
 	}
 
+	/**
+	 * when a player clicks undo button, check whether he can do undo
+	 */
 	public void tryUndo() {
 		if (isGameOver)
 			return;
@@ -238,6 +280,10 @@ public class BoardModel {
 		updateView();
 	}
 
+	/**
+	 * undo previous step
+	 * 
+	 */
 	private void undo() {
 		currentPlayer.setUndo(true);
 		int currentPlayerUndoCounter = currentPlayer.getUndo_Counter();
@@ -250,6 +296,11 @@ public class BoardModel {
 			switchPlayer();
 	}
 
+	/**
+	 * get Mancala information of a player 
+	 * @param player
+	 * @return the player's Mancala, null if no info
+	 */
 	public Mancala getMancala(Player player) {
 		for (Pit pit : pits)
 			if (pit.getPlayer().equals(player) && pit instanceof Mancala)
@@ -258,9 +309,12 @@ public class BoardModel {
 		return null;
 	}
 
+	/**
+	 * after a player finished his round, switch 
+	 */
 	private void switchPlayer() {
 		if (!isGameOver) {
-			if (matchCurrentPlayer(playerA)) {
+			if (compareCurrentPlayer(playerA)) {
 				playerA.deactivateCurrentPlayer();
 				playerB.activateCurrentPlayer();
 				currentPlayer = playerB;
@@ -276,6 +330,10 @@ public class BoardModel {
 		updateView();
 	}
 
+	/**
+	 * determine whether the player has previous step to undo
+	 * @return
+	 */
 	private boolean hasLastStep() {
 		for (Pit pit : pits)
 			if (pit.getMarbles() != lastStep[pit.getPitNum()])
@@ -283,6 +341,9 @@ public class BoardModel {
 		return false;
 	}
 
+	/**
+	 * game over, Mancala gets all the marbles and clear the pits.
+	 */
 	private void wipeBoard() {
 		for (int i = 0; i < PLAYER_A_STORE_INDEX; i++) {
 			pits.get(PLAYER_A_STORE_INDEX).setMarbles(pits.get(PLAYER_A_STORE_INDEX).getMarbles() + pits.get(i).getMarbles());
@@ -301,6 +362,9 @@ public class BoardModel {
 			listener.stateChanged(event);
 	}
 
+	/**
+	 * get the final game result and to be shown to the board
+	 */
 	private void getResult() {
 		int pA = getPlayerMarbles(playerA);
 		int pB = getPlayerMarbles(playerB);
@@ -309,16 +373,19 @@ public class BoardModel {
 		
 		if (pA == pB)
 			setMessage(result + "Tier Game!");
-		
 		else if (pA > pB)
 			setMessage(result + getPlayerA().getPlayerName() + " Wins!");
-		
 		else
 			setMessage(result + getPlayerB().getPlayerName() + " Wins!");
 	
 		updateView();
 	}
 	
+	/**
+	 * calculate the player's marbles number
+	 * @param player
+	 * @return the total marbles number
+	 */
 	private int getPlayerMarbles(Player player) {
 		int count = 0;
 		for (Pit pit : pits)

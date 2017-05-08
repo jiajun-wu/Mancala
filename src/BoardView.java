@@ -12,8 +12,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 /**
- * 
- * @author Jiajun Wu
+ * View for the Mancala game, it draws the GUI of the game.
+ * @author Jiajun Wu, Medha Korrapati, Hien Nguyen
  * May 4, 2017
  */
 public class BoardView implements ChangeListener {
@@ -82,6 +82,6 @@ public class BoardView implements ChangeListener {
 			pit.repaint();
 
 		// display current game information from model
-		gameInfo.setText(boardModel.getMessage());
+		gameInfo.setText("Game Info: "+boardModel.getMessage());
 	}
 }

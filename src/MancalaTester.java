@@ -1,5 +1,4 @@
 
-
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -7,7 +6,11 @@ import java.awt.event.ActionListener;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-
+/**
+ * Tester class for Mancala game
+ * @author Jiajun Wu, Medha Korrapati, Hien Nguyen
+ * May 6, 2017
+ */
 public class MancalaTester implements ActionListener {
 
 	static JButton ellipse_3;
@@ -20,7 +23,7 @@ public class MancalaTester implements ActionListener {
 
 		MancalaTester mt = new MancalaTester();
 
-		gameFrame = new JFrame("Game luncher");
+		gameFrame = new JFrame("Game launcher");
 		gameFrame.setSize(250, 200);
 		gameFrame.setLayout(new FlowLayout());
 		ellipse_3 = new JButton("Ellipse with 3 stones");
@@ -54,21 +57,24 @@ public class MancalaTester implements ActionListener {
 		getCommand(e.getActionCommand());
 	}
 
+	/**
+	 * select pits' style based on parameter type, such as Ellipse or Square,
+	 * then generate the number of marbles as expected.
+	 * 
+	 * @param type
+	 *            the command of the buttons
+	 */
 	private void getCommand(String type) {
 		BoardModel bm = null;
 		switch (type.charAt(0)) {
-		// if it starts with an 'e' than crate ellipse shape pits
 		case 'e':
-			Ellipse es = new Ellipse();
-			bm = new BoardModel(es);
+			// if it starts with an 'e' than crate ellipse shape pits
+			bm = new BoardModel(new Ellipse());
 			break;
-
-		// if it starts with an 'r' than crate square shape pits
 		case 'r':
-			Square rs = new Square();
-			bm = new BoardModel(rs);
+			// if it starts with an 'r' than crate square shape pits
+			bm = new BoardModel(new Square());
 			break;
-
 		default:
 			break;
 		}

@@ -11,7 +11,7 @@ import javax.swing.JComponent;
 
 /**
  * To create a Shape type pit
- * @author Jiajun Wu
+ * @author Jiajun Wu, Medha Korrapati, Hien Nguyen
  *
  */
 public class Pit extends JComponent {

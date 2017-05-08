@@ -6,7 +6,7 @@ import java.awt.Shape;
 
 /**
  * Mancala is a pit; however, shape and size will be a little different
- * @author Jiajun Wu
+ * @author Jiajun Wu, Medha Korrapati, Hien Nguyen
  *
  */
 public class Mancala extends Pit {
